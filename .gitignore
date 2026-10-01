@@ -1,0 +1,11 @@
+# secrets
+.env
+.env.*
+
+# which lesson the page is showing right now
+learn/current.html
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini

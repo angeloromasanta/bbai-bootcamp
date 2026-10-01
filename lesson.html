@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  :root {
+    --bg: #f6f5f1; --card: #ffffff; --ink: #1c1d22; --soft: #62646e; --line: #e2e0d8;
+    --accent: #1f4fd8; --accent-ink: #ffffff; --accent-soft: #e8eefc;
+    --good: #1c7c4a; --warn: #b4530a; --warn-soft: #fbeedd;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15161a; --card: #1e2026; --ink: #ecedf1; --soft: #a2a5b1; --line: #33363f;
+      --accent: #8fb0ff; --accent-ink: #10131c; --accent-soft: #263150;
+      --good: #6fd39b; --warn: #f0b070; --warn-soft: #3a2c1b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px 48px; }
+
+  header { position: sticky; top: 0; z-index: 5; background: var(--bg);
+           border-bottom: 1px solid var(--line); padding: 12px 0 10px; }
+  .top { display: flex; align-items: baseline; gap: 12px; }
+  h1 { font-size: 19px; margin: 0; flex: 1; letter-spacing: -0.01em; }
+  .status { font-size: 12.5px; color: var(--soft); white-space: nowrap; }
+  .status::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+                    background: var(--soft); margin-right: 6px; }
+  .status.live::before { background: var(--good); }
+  .steps { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .steps span { font-size: 12px; padding: 2px 10px; border-radius: 99px; border: 1px solid var(--line); color: var(--soft); }
+  .steps span.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .steps span.past { color: var(--ink); }
+
+  #map { margin: 16px 0 0; display: none; }
+  #map summary { cursor: pointer; font-size: 13.5px; color: var(--soft); padding: 2px; }
+  #map summary b { color: var(--ink); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; margin-right: 6px; }
+  #map ul { margin: 8px 0 0; padding: 0; list-style: none; text-align: left; }
+  /* the map as a graph: mermaid lays it out, the colours of each state are set here */
+  #map .graph { margin-top: 8px; text-align: center; }
+  #map .graph svg { max-width: 100%; height: auto; }
+  #map .node rect { fill: var(--card) !important; stroke: var(--line) !important; stroke-width: 1.5px !important; }
+  #map .node .nodeLabel, #map .node .nodeLabel p { color: var(--soft) !important; }
+  #map .node:is(.have, .done, .now, .shaky) .nodeLabel, #map .node:is(.have, .done, .now, .shaky) .nodeLabel p { color: var(--ink) !important; }
+  #map .node:is(.have, .done) rect { stroke: var(--good) !important; }
+  #map .node.have rect { stroke-dasharray: 5 4; }
+  #map .node.shaky rect { stroke: var(--warn) !important; }
+  #map .node.now rect { fill: var(--accent-soft) !important; stroke: var(--accent) !important; stroke-width: 2.5px !important; }
+  #map .flowchart-link { stroke: var(--soft) !important; }
+  #map .marker, #map .arrowMarkerPath { fill: var(--soft) !important; stroke: var(--soft) !important; }
+  #map li { display: flex; gap: 10px; align-items: center; padding: 5px 10px; font-size: 14px;
+            border-left: 3px solid var(--line); color: var(--soft); }
+  #map li b { font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; min-width: 46px; }
+  #map li.have, #map li.done { border-color: var(--good); color: var(--ink); }
+  #map li.have b, #map li.done b { color: var(--good); }
+  #map li.now { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); font-weight: 600; }
+  #map li.now b { color: var(--accent); }
+  #map li.shaky { border-color: var(--warn); color: var(--ink); }
+  #map li.shaky b { color: var(--warn); }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin-top: 16px; }
+  .card.old { opacity: .72; padding: 12px 16px; font-size: 14.5px; }
+  .card.old .you { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); color: var(--soft); }
+  .card.old .you b { color: var(--ink); }
+  .card > :first-child { margin-top: 0; } .card > :last-child { margin-bottom: 0; }
+  .card h3 { font-size: 17px; margin: 14px 0 6px; }
+  .card p { margin: 8px 0; }
+  .card ul, .card ol { margin: 8px 0; padding-left: 22px; }
+  .card blockquote { margin: 10px 0; padding: 6px 14px; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 8px 8px 0; }
+  .card code { background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: 0 5px; font-size: .92em; }
+  .card pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; overflow: auto; }
+  .card pre code { border: 0; padding: 0; background: none; }
+  .card table { border-collapse: collapse; margin: 10px 0; }
+  .card td, .card th { border: 1px solid var(--line); padding: 4px 10px; }
+  .fig { margin: 12px 0; text-align: center; }
+  .fig svg { max-width: 100%; height: auto; }
+  .simfig { margin: 12px 0; }
+  iframe.sim { display: block; width: 100%; height: 420px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
+  .simbar { font-size: 12px; color: var(--soft); text-align: right; margin-top: 4px; }
+  .simbar a { color: var(--soft); }
+
+  .opts { display: grid; gap: 8px; margin-top: 14px; }
+  .opt { background: var(--card); border: 1.5px solid var(--line); border-radius: 10px; padding: 10px 14px; display: flex; gap: 12px; }
+  .opt .k { font-weight: 700; color: var(--accent); min-width: 16px; }
+  .opt.dk { color: var(--soft); border-style: dashed; }
+  .reply { margin-top: 14px; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); font-size: 14.5px; }
+  .reply b { color: var(--accent); }
+  kbd { font: inherit; font-weight: 700; background: var(--card); border: 1px solid var(--line); border-radius: 5px; padding: 0 6px; }
+  .welcome { text-align: center; color: var(--soft); padding: 40px 10px; }
+  .welcome code { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; color: var(--ink); }
+  iframe.feed { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="top"><h1 id="topic">Lesson</h1><span id="status" class="status">waiting for Kiro</span></div>
+    <div class="steps" id="steps"></div>
+  </header>
+  <div id="history"></div>
+  <div id="map"></div>
+  <div id="current"></div>
+</div>
+<iframe id="ptr" class="feed" title="lesson pointer"></iframe>
+<iframe class="feed probe" title="screen"></iframe><iframe class="feed probe" title="screen"></iframe><iframe class="feed probe" title="screen"></iframe>
+
+<script>
+/* The agent writes each screen as a new file, learn/<lesson>/screens/NN.html, and names the
+   lesson in learn/current.html. This page shows them; you answer in Kiro.
+   A page opened from disk may not read another file, so each file is loaded in a hidden
+   frame and hands its own text over with postMessage. No server, no install.
+   lesson.html#<lesson> replays a finished lesson. */
+const $ = s => document.querySelector(s);
+const STEPS = ['probe', 'plan', 'teach', 'check', 'log'];
+let lesson = '', replay = false, lastHeard = 0;
+const screens = new Map();      // screen number -> its text
+
+const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+function tex(t, display) {
+  if (window.katex) {
+    try { return katex.renderToString(t.trim(), { displayMode: display, throwOnError: false }); } catch (e) {}
+  }
+  return '<code>' + esc(display ? '$$' + t + '$$' : '$' + t + '$') + '</code>';
+}
+
+function inline(s) {
+  return s.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+          .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<i>$2</i>')
+          .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+}
+
+/* $...$ is maths unless it looks like two prices: "$5 and $6" has a space next to a
+   dollar sign and no maths character in between */
+const isMath = t => t.trim() === t || /[\\^_={}]/.test(t);
+
+/* one line: maths, code, bold. For map labels and answer options */
+function mdi(src) {
+  const stash = [];
+  const keep = h => { stash.push(h); return '\u0000' + (stash.length - 1) + '\u0000'; };
+  src = src.replace(/\$([^$\n]+?)\$/g, (m, t) => (isMath(t) ? keep(tex(t, false)) : m));
+  src = src.replace(/`([^`\n]+)`/g, (_, c) => keep('<code>' + esc(c) + '</code>'));
+  return inline(esc(src)).replace(/\u0000(\d+)\u0000/g, (_, n) => stash[+n]);
+}
+
+/* a simulation: a file in learn/<lesson>/sims/ shown in a frame. It reports its own height.
+   No sandbox attribute: a sandboxed frame opened from disk may not load lesson/sim.js. */
+function simHtml(path) {
+  if (!/^learn\/[\w.-]+\/sims\/[\w.-]+\.html$/.test(path)) return '<pre><code>' + esc(path) + '</code></pre>';
+  return '<div class="simfig"><iframe class="sim" src="' + path + '?t=' + Date.now() + '" title="simulation"></iframe>'
+    + '<div class="simbar"><a href="' + path + '" target="_blank" rel="noopener">open in its own tab</a> · <a href="#" class="simreload">reload</a></div></div>';
+}
+
+function md(src) {
+  const stash = [];
+  const keep = h => { stash.push(h); return '\u0000' + (stash.length - 1) + '\u0000'; };
+  src = src.replace(/\r/g, '');
+  src = src.replace(/<svg[\s\S]*?<\/svg>/gi, m => keep('<div class="fig">' + m + '</div>'));
+  src = src.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+    if (lang === 'mermaid') return keep('<div class="fig mermaid-src" data-src="' + esc(code) + '"><pre>' + esc(code) + '</pre></div>');
+    if (lang === 'sim') return keep(simHtml(code.trim()));
+    return keep('<pre><code>' + esc(code) + '</code></pre>');
+  });
+  src = src.replace(/\$\$([\s\S]+?)\$\$/g, (_, t) => keep(tex(t, true)));
+  src = src.replace(/\$([^$\n]+?)\$/g, (m, t) => (isMath(t) ? keep(tex(t, false)) : m));
+  src = src.replace(/`([^`\n]+)`/g, (_, c) => keep('<code>' + esc(c) + '</code>'));
+  const lines = esc(src).split('\n');
+  const out = [];
+  let para = [], list = null;
+  const flushP = () => { if (para.length) { out.push('<p>' + inline(para.join(' ')) + '</p>'); para = []; } };
+  const flushL = () => { if (list) { out.push('<' + list.tag + '>' + list.items.map(i => '<li>' + inline(i) + '</li>').join('') + '</' + list.tag + '>'); list = null; } };
+  for (let i = 0; i < lines.length; i++) {
+    const ln = lines[i];
+    let m;
+    if (!ln.trim()) { flushP(); flushL(); continue; }
+    if ((m = ln.match(/^(#{2,4})\s+(.*)/))) { flushP(); flushL(); out.push('<h3>' + inline(m[2]) + '</h3>'); continue; }
+    if ((m = ln.match(/^\s*[-*]\s+(.*)/))) { flushP(); if (!list || list.tag !== 'ul') { flushL(); list = { tag: 'ul', items: [] }; } list.items.push(m[1]); continue; }
+    if ((m = ln.match(/^\s*\d+[.)]\s+(.*)/))) { flushP(); if (!list || list.tag !== 'ol') { flushL(); list = { tag: 'ol', items: [] }; } list.items.push(m[1]); continue; }
+    if ((m = ln.match(/^&gt;\s?(.*)/))) { flushP(); flushL(); out.push('<blockquote>' + inline(m[1]) + '</blockquote>'); continue; }
+    if (/^\|.*\|\s*$/.test(ln)) {
+      flushP(); flushL();
+      const rows = [];
+      while (i < lines.length && /^\|.*\|\s*$/.test(lines[i])) { rows.push(lines[i]); i++; }
+      i--;
+      const cells = r => r.trim().slice(1, -1).split('|').map(c => inline(c.trim()));
+      const body = rows.filter(r => !/^\|[\s:|-]+\|\s*$/.test(r));
+      const head = body.length !== rows.length;
+      out.push('<table>' + body.map((r, n) => { const t = n === 0 && head ? 'th' : 'td'; return '<tr>' + cells(r).map(c => '<' + t + '>' + c + '</' + t + '>').join('') + '</tr>'; }).join('') + '</table>');
+      continue;
+    }
+    if (list && /^\s+\S/.test(ln)) { list.items[list.items.length - 1] += ' ' + ln.trim(); continue; }
+    flushL(); para.push(ln.trim());
+  }
+  flushP(); flushL();
+  return out.join('\n').replace(/\u0000(\d+)\u0000/g, (_, n) => stash[+n]);
+}
+
+function parse(text) {
+  const p = { topic: '', meta: {}, map: [], screen: '', ask: { type: 'none', options: [] } };
+  const buf = { map: [], screen: [], ask: [] };
+  let sec = 'head';
+  for (const ln of text.replace(/\r/g, '').split('\n')) {
+    const h = ln.match(/^##\s+(Map|Screen|Ask)\s*$/i);
+    if (h) { sec = h[1].toLowerCase(); continue; }
+    if (sec === 'head') {
+      const t = ln.match(/^#\s+(.*)/);
+      if (t) { p.topic = t[1].trim(); continue; }
+      const m = ln.match(/^([a-z_]+):\s*(.*)$/i);
+      if (m) p.meta[m[1].toLowerCase()] = m[2].trim();
+    } else buf[sec].push(ln);
+  }
+  for (const ln of buf.map) {
+    // - [state] 2. Label <- 1, a      the part after <- names the boxes this one rests on
+    const m = ln.match(/^\s*[-*]\s*\[(\w+)\]\s*(.*)/);
+    if (!m) continue;
+    const [text, needs = ''] = m[2].split(/\s*<-\s*/);
+    const id = text.match(/^(\d{1,2}|[a-z])[.)]\s+(.*)/i);
+    p.map.push({
+      state: m[1].toLowerCase(), id: id ? id[1].toLowerCase() : '',
+      label: id && /[a-z]/i.test(id[1]) ? id[2].trim() : text.trim(),     // a letter is only a name; a number is shown
+      needs: needs.split(/[\s,]+/).map(k => k.replace(/\W/g, '').toLowerCase()).filter(Boolean)
+    });
+  }
+  p.screen = buf.screen.join('\n').trim();
+  for (const ln of buf.ask) {
+    const o = ln.match(/^\s*[-*]\s+(.*)/);
+    if (o) p.ask.options.push(o[1].trim().replace(/^[A-Ha-h][).]\s+/, ''));   // tolerate "A) ..."
+    else if (ln.trim() && p.ask.type === 'none') p.ask.type = ln.trim().toLowerCase();
+  }
+  return p;
+}
+
+
+function setStatus(live, text) { const s = $('#status'); s.className = 'status' + (live ? ' live' : ''); s.textContent = text; }
+
+function askHtml(a) {
+  const say = t => '<div class="reply"><b>In Kiro:</b> ' + t + '</div>';
+  if (a.type === 'choice') {
+    const dk = 'ABCDEFGH'[a.options.length];
+    return '<div class="opts">' + a.options.map((o, i) => '<div class="opt"><span class="k">' + 'ABCDEFGH'[i] + '</span><span>' + mdi(o) + '</span></div>').join('')
+      + '<div class="opt dk"><span class="k">' + dk + '</span><span>I don\'t know</span></div></div>'
+      + say('type the letter, and your reasoning if you like. For example <kbd>B, because the variance adds</kbd>. Not sure? <kbd>' + dk + '</kbd> beats a guess.');
+  }
+  if (a.type === 'text') return say('type your answer in your own words.');
+  if (a.type === 'next') return say('type <kbd>n</kbd> for the next step, or ask something: "slower", "another example", "why?"');
+  if (a.type === 'approve') return say('type <kbd>ok</kbd> to start, or say what to change.');
+  return '';
+}
+
+/* mermaid is fetched the first time a diagram is needed. Without it (no internet) a
+   diagram stays as its text and the map stays as a list. */
+const mermaidWaiting = [];
+let mermaidCount = 0;
+function renderMermaid(src, done) {
+  const go = () => {
+    const id = 'mm' + (++mermaidCount);
+    mermaid.render(id, src).then(r => done(r.svg)).catch(() => { const junk = document.getElementById('d' + id); if (junk) junk.remove(); });
+  };
+  if (window.mermaid) return go();
+  mermaidWaiting.push(go);
+  if (mermaidWaiting.length > 1) return;
+  const s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+  s.onload = () => {
+    mermaid.initialize({ startOnLoad: false, suppressErrorRendering: true, flowchart: { rankSpacing: 30, nodeSpacing: 24, padding: 10 }, fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+      themeVariables: { fontSize: '14px' }, theme: matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'neutral' });
+    mermaidWaiting.splice(0).forEach(f => f());
+  };
+  document.head.appendChild(s);
+}
+
+function drawMermaid() {
+  document.querySelectorAll('.mermaid-src:not(.drawn)').forEach(n => {
+    n.classList.add('drawn');
+    renderMermaid(n.dataset.src, svg => { n.innerHTML = svg; });
+  });
+}
+
+/* The map as a mermaid graph, built from the ## Map lines. A box with no "<-" rests on
+   the box before it; the first box rests on every starting point. */
+const MAP_STATES = ['have', 'done', 'now', 'todo', 'shaky'];
+const isBox = m => (m.id ? /^\d/.test(m.id) : m.state !== 'have');
+function mapGraph(map) {
+  const plain = t => t.replace(/\*\*|[*`$]/g, '').replace(/["#<>&]/g, c => '#' + c.charCodeAt(0) + ';');
+  const mark = { done: '\u2713 ', shaky: '? ' };
+  const byId = new Map();
+  map.forEach((m, i) => { if (m.id) byId.set(m.id, i); });
+  const out = ['graph TD'];
+  map.forEach((m, i) => out.push('  n' + i + '["' + (mark[m.state] || '') + plain(m.label) + '"]:::' + (MAP_STATES.includes(m.state) ? m.state : 'todo')));
+  let prev = -1;
+  map.forEach((m, i) => {
+    let from = [...new Set(m.needs.map(k => byId.get(k)).filter(j => j !== undefined && j !== i))];
+    if (!from.length && isBox(m)) from = prev >= 0 ? [prev] : map.map((_, j) => j).filter(j => !isBox(map[j]));
+    from.forEach(j => out.push('  n' + j + ' --> n' + i));
+    if (isBox(m)) prev = i;
+  });
+  return out.join('\n');
+}
+
+const mapSvg = new Map();       // graph source -> drawn svg, so a new screen does not flash the list
+let mapFolded = false;          // the map is open on every screen, until I fold it; then it stays as I left it
+function drawMap(map) {
+  const g = $('#map .graph');
+  if (!g) return;
+  const src = mapGraph(map);
+  if (mapSvg.has(src)) { g.innerHTML = mapSvg.get(src); return; }
+  renderMermaid(src, svg => { mapSvg.set(src, svg); if (g.isConnected) g.innerHTML = svg; });
+}
+
+/* earlier screens keep the link to a simulation, not a second live copy of it */
+const frozen = html => html.replace(/<iframe class="sim"[^>]*><\/iframe>/g, '').replace(/ · <a href="#" class="simreload">reload<\/a>/g, '');
+
+function paint() {
+  const nums = [...screens.keys()].sort((a, b) => a - b);
+  if (!nums.length) return welcome();
+  const parsed = nums.map(n => parse(screens.get(n)));
+  const p = parsed[parsed.length - 1];
+  $('#topic').textContent = p.topic || 'Lesson';
+  document.title = (p.topic ? p.topic + ' · ' : '') + 'Lesson';
+  const at = STEPS.indexOf((p.meta.step || '').toLowerCase());
+  $('#steps').innerHTML = STEPS.map((s, i) => '<span class="' + (i === at ? 'on' : i < at ? 'past' : '') + '">' + (i + 1) + ' · ' + s[0].toUpperCase() + s.slice(1) + '</span>').join('');
+  const names = { have: 'have', done: 'done', now: 'now', todo: 'next', shaky: 'shaky' };
+  $('#map').style.display = p.map.length ? 'block' : 'none';
+  if (p.map.length) {
+    const boxes = p.map.filter(isBox), now = p.map.find(m => m.state === 'now');
+    const where = (now ? 'now: ' + mdi(now.label) + ' · ' : '') + boxes.filter(m => m.state === 'done').length + ' of ' + boxes.length + ' done';
+    $('#map').innerHTML = '<details' + (mapFolded ? '' : ' open') + '><summary><b>Map</b>' + where + '</summary><div class="graph"><ul>'
+      + p.map.map(m => '<li class="' + esc(m.state) + '"><b>' + (names[m.state] || esc(m.state)) + '</b><span>' + mdi(m.label) + '</span></li>').join('')
+      + '</ul></div></details>';
+    const d = $('#map details');
+    $('#map summary').onclick = () => { mapFolded = d.open; };     // read before the click toggles it
+    drawMap(p.map);
+  } else $('#map').innerHTML = '';
+  // every earlier screen, with what I answered (the next screen's "you:" line)
+  $('#history').innerHTML = parsed.slice(0, -1).map((q, i) => {
+    const you = parsed[i + 1].meta.you || '';
+    return '<div class="card old">' + frozen(md(q.screen)) + askHtml(q.ask).replace(/<div class="reply">[\s\S]*?<\/div>/, '')
+      + (you ? '<div class="you">You: <b>' + esc(you) + '</b></div>' : '') + '</div>';
+  }).join('');
+  $('#current').innerHTML = '<div class="card">' + md(p.screen) + '</div>' + (replay ? '' : askHtml(p.ask));
+  document.querySelectorAll('.simreload').forEach(a => a.onclick = e => {
+    e.preventDefault();
+    const f = a.closest('.simfig').querySelector('iframe');
+    f.src = f.src.replace(/\?t=\d+/, '?t=' + Date.now());
+  });
+  drawMermaid();
+}
+
+function welcome() {
+  $('#history').innerHTML = ''; $('#map').style.display = 'none'; $('#steps').innerHTML = '';
+  $('#topic').textContent = 'Lesson';
+  $('#current').innerHTML = '<div class="welcome"><p>No lesson on screen yet.</p><p>In Kiro, type <code>teach me &lt;your topic&gt;. I have 20 minutes.</code></p><p>Keep this page open next to the terminal.</p></div>';
+}
+
+/* Bring the map and the newest screen to the top, under the header. Earlier screens sit
+   above and would otherwise be all I see. Instant, and measured from the top of the newest
+   screen, so several screens arriving at once or a late picture cannot leave it short. */
+function toCurrent() {
+  const el = $('#map').style.display === 'block' ? $('#map') : $('#current');
+  window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - $('header').offsetHeight - 8);
+}
+
+let paintQueued = false, scrollQueued = false;
+function schedulePaint(scroll) {
+  scrollQueued = scrollQueued || scroll;
+  if (paintQueued) return;
+  paintQueued = true;
+  setTimeout(() => { const go = scrollQueued; paintQueued = scrollQueued = false; paint(); if (go) toCurrent(); }, 60);
+}
+
+/* KaTeX arrived after the first paint: draw the maths again; heights above have changed */
+function rerender() { if (screens.size) { paint(); toCurrent(); } }
+
+function setLesson(name) {
+  if (!/^[\w.-]+$/.test(name) || name === lesson) return;
+  lesson = name; screens.clear(); welcome();
+  setTimeout(tick, 30);
+}
+
+/* Each lesson file hands over its own address and its text:
+   learn/current.html names the lesson folder; learn/<lesson>/screens/NN.html is one screen. */
+window.addEventListener('message', e => {
+  const d = e.data;
+  if (!d) return;
+  if (d.lessonSim) {
+    for (const f of document.querySelectorAll('iframe.sim')) {
+      if (f.contentWindow === e.source) f.style.height = Math.min(900, Math.max(120, Math.ceil(d.height) + 2)) + 'px';
+    }
+    return;
+  }
+  if (typeof d.lessonFile !== 'string' || typeof d.text !== 'string') return;
+  let href = d.lessonFile;
+  try { href = decodeURIComponent(href); } catch (err) {}
+  lastHeard = Date.now();
+  if (/learn\/current\.html/.test(href)) { if (!replay) setLesson(d.text.trim()); return; }
+  const m = href.match(/learn\/([\w.-]+)\/screens\/(\d+)\.html/);
+  if (!m || m[1] !== lesson) return;
+  const n = +m[2], text = d.text.replace(/^\s*\n/, '');
+  if (!text.trim() || screens.get(n) === text) return;
+  const isNew = !screens.has(n);
+  screens.set(n, text);
+  schedulePaint(isNew);
+  if (isNew) setTimeout(tick, 30);        // more screens may be waiting: look again at once
+});
+
+const pad = n => String(n).padStart(2, '0');
+
+function tick() {
+  const t = Date.now();
+  if (!replay) $('#ptr').src = 'learn/current.html?t=' + t;
+  if (lesson) {
+    // the newest screen (it may have been corrected) and the next two numbers
+    const top = Math.max(0, ...screens.keys());
+    const nums = top ? [top, top + 1, top + 2] : [1, 2, 3];
+    document.querySelectorAll('iframe.probe').forEach((f, i) => { f.src = 'learn/' + lesson + '/screens/' + pad(nums[i]) + '.html?t=' + t; });
+  }
+  const live = t - lastHeard < 4000;
+  if (replay) setStatus(false, 'replay of ' + lesson);
+  else if (!screens.size) setStatus(false, 'waiting for Kiro');
+  else setStatus(live, live ? 'live' : 'not updating');
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const h = decodeURIComponent(location.hash.slice(1));
+  if (/^[\w.-]+$/.test(h)) { replay = true; lesson = h; }
+  welcome(); tick(); setInterval(tick, 1000);
+});
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" onload="rerender()"></script>
+</body>
+</html>
