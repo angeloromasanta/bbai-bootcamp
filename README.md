@@ -10,8 +10,8 @@ at a time on a page in your browser, with a simulation you can play with.
 | **`learn`** skill | the tutor. You say `teach me the normal distribution` |
 | **`lesson.html`** | the page the lesson appears on. Keep it open next to the terminal |
 | **`AGENTS.md`** | the BBAI system prompt: the agent acts as a tutor, not a solution generator. It reads this file in every session |
-| **[`Prompts.md`](Prompts.md)** | the prompts of the four bootcamp labs, ready to copy and paste |
-| **[`CHEATSHEET.md`](CHEATSHEET.md)** | the commands of the three tools side by side, and how to stop the permission prompts |
+| **[`prompts.md`](prompts.md)** | the prompts of the four bootcamp labs, ready to copy and paste |
+| **[`cheatsheet.md`](cheatsheet.md)** | the commands of the three tools side by side, and how to stop the permission prompts |
 
 ## 1. Get it
 
@@ -62,7 +62,7 @@ goal, then teaches one box of the map at a time, with a simulation and a check.
 - **Steer it.** `slower`, `faster`, `skip this`, `another example`, `time's up` all work.
 - **Don't trust it blindly.** Ask `are you sure? check that` whenever a fact matters.
 - **Let it save.** When the agent asks to write a file, allow it for the session. It is
-  writing in `learn/`. [The cheatsheet](CHEATSHEET.md#5-stop-the-permission-prompts)
+  writing in `learn/`. [The cheatsheet](cheatsheet.md#5-stop-the-permission-prompts)
   says how to stop the prompts.
 
 Each lesson is saved in `learn/<your-topic>/`: your notes, every screen and the
