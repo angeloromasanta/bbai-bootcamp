@@ -10,6 +10,7 @@ at a time on a page in your browser, with a simulation you can play with.
 | **`learn`** skill | the tutor. You say `teach me the normal distribution` |
 | **`lesson.html`** | the page the lesson appears on. Keep it open next to the terminal |
 | **`AGENTS.md`** | the BBAI system prompt: the agent acts as a tutor, not a solution generator. It reads this file in every session |
+| **[`Prompts.md`](Prompts.md)** | the prompts of the four bootcamp labs, ready to copy and paste |
 | **[`CHEATSHEET.md`](CHEATSHEET.md)** | the commands of the three tools side by side, and how to stop the permission prompts |
 
 ## 1. Get it
