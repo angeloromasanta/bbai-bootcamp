@@ -9,7 +9,7 @@ at a time on a page in your browser, with a simulation you can play with.
 |---|---|
 | **`learn`** skill | the tutor. You say `teach me the normal distribution` |
 | **`lesson.html`** | the page the lesson appears on. Keep it open next to the terminal |
-| **`AGENTS.md`** | who you are and how you learn. The agent reads it in every session |
+| **`AGENTS.md`** | the BBAI system prompt: the agent acts as a tutor, not a solution generator. It reads this file in every session |
 | **[`CHEATSHEET.md`](CHEATSHEET.md)** | the commands of the three tools side by side, and how to stop the permission prompts |
 
 ## 1. Get it
@@ -26,8 +26,9 @@ it in Finder or Explorer. It is there.
 
 ## 2. Set up
 
-1. Open `AGENTS.md` in any editor and change the lines under **About me** until they
-   are true for you.
+1. Read `AGENTS.md`: it is the BBAI system prompt. Then make it yours. Ask your agent
+   "guide me through customizing AGENTS.md", or add your own lines: what you study,
+   how you learn best, how you want answers.
 2. Double-click `lesson.html`. It opens in your browser and says "No lesson on screen yet".
 3. Put the browser on one half of your screen and a terminal on the other.
 4. In the terminal, go into the folder and start the agent with a strong model:
